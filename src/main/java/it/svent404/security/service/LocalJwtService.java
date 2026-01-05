@@ -46,7 +46,7 @@ public class LocalJwtService {
 
         String token = Jwts.builder()
                 .subject(auth.getName())
-                .issuer(props.getJwt().getIssuer())
+                .issuer("sso-security-lib")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(exp))
                 .claim("roles", auth.getAuthorities()

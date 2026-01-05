@@ -1,7 +1,8 @@
 package it.svent404.security.autoconfig;
 
-import it.svent404.security.service.LocalJwtService;
+import it.svent404.security.service.JwtConverter;
 import it.svent404.security.properties.SsoSecurityProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -13,8 +14,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -25,12 +24,13 @@ import org.springframework.security.web.SecurityFilterChain;
 public class KeycloakJwtAutoConfiguration {
 
     @Bean
-    public JwtDecoder jwtDecoder(SsoSecurityProperties ssoSecurityProperties) {
-        return NimbusJwtDecoder.withJwkSetUri(ssoSecurityProperties.getJwt().getJwkSet()).build();
+    public JwtDecoder jwtDecoder(@Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}") String jwtSetUri) {
+        return NimbusJwtDecoder.withJwkSetUri(jwtSetUri).build();
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, LocalJwtService jwtService) {
+    SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                            JwtConverter jwtConverter) {
 
         return http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -38,33 +38,25 @@ public class KeycloakJwtAutoConfiguration {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/auth/**",
                                 "/v3/api-docs/**",
-                                "/public/**",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/swagger-ui.html",
+                                "/webjars/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
-                                .jwtAuthenticationConverter(grantedAuthoritiesExtractor())
+                                .jwtAuthenticationConverter(jwtConverter)
                         )
                 )
                 .build();
     }
 
     @Bean
-    public JwtAuthenticationConverter grantedAuthoritiesExtractor() {
-        JwtGrantedAuthoritiesConverter converter = new JwtGrantedAuthoritiesConverter();
-
-        converter.setAuthoritiesClaimName("realm_access");
-        converter.setAuthorityPrefix("ROLE_");
-
-        JwtAuthenticationConverter authConverter = new JwtAuthenticationConverter();
-        authConverter.setJwtGrantedAuthoritiesConverter(converter);
-
-        return authConverter;
+    public JwtConverter jwtConverter(SsoSecurityProperties ssoSecurityProperties) {
+        return new JwtConverter(ssoSecurityProperties.getJwt().getAuth().getConverter().getPrincipleAttribute(),
+                ssoSecurityProperties.getJwt().getAuth().getConverter().getResourceId());
     }
 
 }

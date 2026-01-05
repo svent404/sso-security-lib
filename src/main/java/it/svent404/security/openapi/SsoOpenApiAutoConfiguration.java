@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Bean;
 @AutoConfiguration
 @ConditionalOnClass(name = "io.swagger.v3.oas.models.OpenAPI")
 @ConditionalOnBooleanProperty(prefix = "sso", name = "enabled", havingValue = true, matchIfMissing = false)
-@ConditionalOnProperty(prefix = "sso", name = "mode", havingValue = "local")
 public class SsoOpenApiAutoConfiguration {
 
     @Bean

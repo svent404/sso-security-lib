@@ -13,10 +13,20 @@ public class SsoSecurityProperties {
 
     @Getter @Setter
     public static class Jwt {
-        private String issuer;
-        private String jwkSet;
         private String secret;
         private long expirationSeconds = 3600;
+        private Auth auth;
+    }
+
+    @Getter @Setter
+    public static class Auth {
+        private Converter converter;
+
+        @Getter @Setter
+        public static class Converter {
+            private String resourceId;
+            private String principleAttribute;
+        }
     }
 }
 
