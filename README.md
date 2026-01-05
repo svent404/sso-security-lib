@@ -119,6 +119,27 @@ spring:
 
 ```
 
+Here, a `docker-compose.yaml` file is also provided to start Keycloak on Podman Desktop, or a similar containerization environment:
+
+```yaml
+services:
+  keycloak:
+    container_name: keycloak_demo
+    image: quay.io/keycloak/keycloak:25.0.5
+    ports:
+      - 9090:8080
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    command:
+      - 'start-dev'
+
+volumes:
+  keycloak_data:
+```
+
 ### 🔐 What the library does
 
 - Automatically configures the application as an **OAuth2 Resource Server**
@@ -128,6 +149,7 @@ spring:
 
 📌 **No `/auth/**` endpoints are exposed in this mode**  
 📌 Authentication is fully delegated to Keycloak
+
 
 ---
 
