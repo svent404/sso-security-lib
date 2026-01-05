@@ -5,13 +5,21 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
-public class OpenApiConfiguration {
+@AutoConfiguration
+@ConditionalOnClass(name = "io.swagger.v3.oas.models.OpenAPI")
+@ConditionalOnBooleanProperty(prefix = "sso", name = "enabled", havingValue = true, matchIfMissing = false)
+@ConditionalOnProperty(prefix = "sso", name = "mode", havingValue = "local")
+public class SsoOpenApiAutoConfiguration {
 
     @Bean
+    @ConditionalOnMissingBean
     public OpenAPI openAPI() {
 
         SecurityScheme bearerScheme = new SecurityScheme()

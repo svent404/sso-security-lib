@@ -1,6 +1,8 @@
 package it.svent404.security.autoconfig;
 
+import it.svent404.security.controller.LocalJwtController;
 import it.svent404.security.filter.LocalJwtAuthFilter;
+import it.svent404.security.repository.InMemoryTokenRepository;
 import it.svent404.security.service.LocalJwtService;
 import it.svent404.security.properties.SsoSecurityProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
@@ -9,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -30,7 +33,23 @@ import java.time.Clock;
 @ConditionalOnProperty(prefix = "sso", name = "mode", havingValue = "local", matchIfMissing = false)
 @EnableConfigurationProperties(SsoSecurityProperties.class)
 @EnableMethodSecurity
+@Import(LocalJwtController.class)
 public class LocalJwtAutoConfiguration {
+
+    @Bean
+    LocalJwtService localJwtService(
+            SsoSecurityProperties props,
+            Clock clock,
+            InMemoryTokenRepository tokenRepository) {
+
+
+        return new LocalJwtService(props, clock, tokenRepository);
+    }
+
+    @Bean
+    InMemoryTokenRepository inMemoryTokenRepository() {
+        return new InMemoryTokenRepository();
+    }
 
     @Bean
     @ConditionalOnMissingBean
@@ -46,24 +65,23 @@ public class LocalJwtAutoConfiguration {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, LocalJwtService jwtService) {
-
+    SecurityFilterChain securityFilterChain(HttpSecurity http, LocalJwtService jwtService) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(s -> s
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/auth/**",
                                 "/v3/api-docs/**",
-                                "/public/**",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/swagger-ui.html",
+                                "/webjars/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter(jwtService),
-                        UsernamePasswordAuthenticationFilter.class).build();
+                .addFilterBefore(new LocalJwtAuthFilter(jwtService),
+                        UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     @Bean

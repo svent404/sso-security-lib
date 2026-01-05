@@ -7,7 +7,6 @@ import it.svent404.security.model.response.TokenResponse;
 import it.svent404.security.model.response.UserInfoResponse;
 import it.svent404.security.service.LocalJwtService;
 import lombok.AllArgsConstructor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@ConditionalOnProperty(prefix = "sso", name = "mode", havingValue = "local", matchIfMissing = false)
 @AllArgsConstructor
 public class LocalJwtController {
 

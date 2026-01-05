@@ -1,0 +1,3 @@
+it.svent404.security.autoconfig.LocalJwtAutoConfiguration
+it.svent404.security.autoconfig.KeycloakJwtAutoConfiguration
+it.svent404.security.openapi.SsoOpenApiAutoConfiguration
